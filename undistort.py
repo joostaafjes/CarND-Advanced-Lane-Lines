@@ -3,9 +3,9 @@ import cv2
 from matplotlib import pyplot as plt
 
 # Test undistortion on an image
-#img = cv2.imread('./camera_cal/test_image.jpg')
-img = cv2.imread('./test_images/t1.jpg')
-img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+img = cv2.imread('./camera_cal/test_image.jpg')
+# img = cv2.imread('./test_images/test1.jpg')
+# img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 img_size = (img.shape[1], img.shape[0])
 
 # load pickle with mtx and dist
