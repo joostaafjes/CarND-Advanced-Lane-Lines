@@ -40,15 +40,20 @@ I start by preparing "object points", which will be the (x, y, z) coordinates of
 
 I then used the output `objpoints` and `imgpoints` to compute the camera calibration and distortion coefficients using the `cv2.calibrateCamera()` function.  I applied this distortion correction to the test image using the `cv2.undistort()` function and obtained this result: 
 
+A few images were not suitable for calibration because not all inner corners were visible.
+
 ![Undistorted][image1]
 
 ### Pipeline (single images)
 
 #### 1. Provide an example of a distortion-corrected image.
 
-To demonstrate this step, I will describe how I apply the distortion correction to one of the test images like this one:
+I appled the distortion correction to the test images `test1.jpg`
 
-To 
+1. Load mtx and dist from pickle file that I have stored during camera calibration (previous step)
+2. Undistort this image
+
+See below for the result
 
 ![alt text][image2]
 
