@@ -1,10 +1,8 @@
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt
-import matplotlib.image as mpimg
 import pickle
 import os
-import operator
 from itertools import product
 import shutil
 import datetime as dt
@@ -462,7 +460,7 @@ for colorspace in [cv2.COLOR_BGR2HLS]:
     for color_channel in [2]:
         hash_already_processed = set()
         print('start channel {}'.format(color_channel))
-        for combination in get_all_combinations(3):
+        for combination in get_all_combinations(5):
         # for combination in ['d|y|x|m&n']:
             for sobel_dir_min_thresh in np.arange(0.1, 1.0, 0.2):
                 for sobel_dir_max_thresh in np.arange(sobel_dir_min_thresh + 0.2, 1.5, 0.2):

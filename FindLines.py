@@ -2,6 +2,9 @@ import numpy as np
 import cv2
 import matplotlib.pyplot as plt
 import sys
+from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+from matplotlib.figure import Figure
+
 
 
 class FindLines:
@@ -11,15 +14,15 @@ class FindLines:
         self.first = True
         self.reset_curv_diff()
 
-    def calculate(self, expected_corner):
+    def calculate(self, expected_corner=None):
         if self.first:
             return self.__calculate(expected_corner)
         else:
             return self.__calculate_known(expected_corner)
 
-    def plot(self, ax, title):
+    def plot(self, ax, title='', input_image=None):
         if self.first:
-            self.__plot(ax, title)
+            self.__plot(ax, title, input_image)
         else:
             self.__plot_known(ax, title)
         # self.first = False
@@ -114,40 +117,87 @@ class FindLines:
         self.left_fitx = self.left_fit[0] * self.ploty ** 2 + self.left_fit[1] * self.ploty + self.left_fit[2]
         self.right_fitx = self.right_fit[0] * self.ploty ** 2 + self.right_fit[1] * self.ploty + self.right_fit[2]
 
-        if (self.left_fitx.max() - self.left_fitx.min()) > 25 and expected_corner == 'straight':
-            return False,  'left lane not straight'
+        if expected_corner:
+            if (self.left_fitx.max() - self.left_fitx.min()) > 25 and expected_corner == 'straight':
+                return False,  'left lane not straight'
 
-        if (self.right_fitx.max() - self.right_fitx.min()) > 25 and expected_corner == 'straight':
-            return False, 'right lane not straight'
+            if (self.right_fitx.max() - self.right_fitx.min()) > 25 and expected_corner == 'straight':
+                return False, 'right lane not straight'
 
-        d1 = self.left_fitx[1:] - self.left_fitx[:-1]
-        a1 = np.average(self.left_fitx[1:] - self.left_fitx[:-1])
-        d2 = self.right_fitx[1:] - self.right_fitx[:-1]
-        a2 = np.average(self.right_fitx[1:] - self.right_fitx[:-1])
-        if expected_corner == 'right' and np.average(self.left_fitx[1:] - self.left_fitx[:-1]) > -0.1:
-            return False, 'left lane not right curve '
+            d1 = self.left_fitx[1:] - self.left_fitx[:-1]
+            a1 = np.average(self.left_fitx[1:] - self.left_fitx[:-1])
+            d2 = self.right_fitx[1:] - self.right_fitx[:-1]
+            a2 = np.average(self.right_fitx[1:] - self.right_fitx[:-1])
+            if expected_corner == 'right' and np.average(self.left_fitx[1:] - self.left_fitx[:-1]) > -0.1:
+                return False, 'left lane not right curve '
 
-        if expected_corner == 'right' and np.average(self.right_fitx[1:] - self.right_fitx[:-1]) > -0.1:
-            return False, 'right lane not right curve '
+            if expected_corner == 'right' and np.average(self.right_fitx[1:] - self.right_fitx[:-1]) > -0.1:
+                return False, 'right lane not right curve '
 
-        if expected_corner == 'left' and np.average(self.left_fitx[1:] - self.left_fitx[:-1]) < 0.1:
-            return False, 'left lane not left curve '
+            if expected_corner == 'left' and np.average(self.left_fitx[1:] - self.left_fitx[:-1]) < 0.1:
+                return False, 'left lane not left curve '
 
-        if expected_corner == 'left' and np.average(self.right_fitx[1:] - self.right_fitx[:-1]) < 0.1:
-            return False, 'right lane not left curve '
+            if expected_corner == 'left' and np.average(self.right_fitx[1:] - self.right_fitx[:-1]) < 0.1:
+                return False, 'right lane not left curve '
 
         return True, 'curves as expected'
 
-    def __plot(self, ax, title):
-
-        self.out_img[self.nonzeroy[self.left_lane_inds], self.nonzerox[self.left_lane_inds]] = [255, 0, 0]
-        self.out_img[self.nonzeroy[self.right_lane_inds], self.nonzerox[self.right_lane_inds]] = [0, 0, 255]
-        ax.imshow(self.out_img)
-        ax.plot(self.left_fitx, self.ploty, color='yellow')
-        ax.plot(self.right_fitx, self.ploty, color='yellow')
+    def __plot(self, ax, title, input):
+        if input.any() == None:
+            self.out_img[self.nonzeroy[self.left_lane_inds], self.nonzerox[self.left_lane_inds]] = [255, 0, 0]
+            self.out_img[self.nonzeroy[self.right_lane_inds], self.nonzerox[self.right_lane_inds]] = [0, 0, 255]
+            ax.imshow(self.out_img)
+        else:
+            ax.imshow(input)
+        ax.plot(self.left_fitx, self.ploty, color='red')
+        ax.plot(self.right_fitx, self.ploty, color='red')
         ax.set_xlim(0, 1280)
         ax.set_ylim(720, 0)
         ax.set_title(title)
+
+            # fig = Figure()
+            # canvas = FigureCanvas(fig)
+            # ax = fig.gca()
+            #
+            # ax.imshow(input)
+            # ax.plot(self.left_fitx, self.ploty, color='yellow')
+            # ax.plot(self.right_fitx, self.ploty, color='yellow')
+            #
+            # canvas.draw()  # draw the canvas, cache the renderer
+            # width, height = fig.get_size_inches() * fig.get_dpi()
+            # width = 1280
+            # height = 720
+            # output_image = np.fromstring(canvas.tostring_rgb(), dtype='uint8').reshape(int(height), int(width), 3)
+            #
+            # return output_image
+        if input.any() == None:
+            return input
+        else:
+            return self.out_img
+
+    def draw_lines(self, input_image):
+        """
+        draw marked lane at black background with same size as input_image
+        :param input_image:
+        :return black image with lane marked:
+        """
+        background_image = np.zeros_like(input_image)
+        left_line_poly = np.array((self.left_fitx, self.ploty)).T.astype(np.int32)
+        left_line_poly = left_line_poly.reshape((-1,1,2))
+        # cv2.polylines(input_image, [left_line_poly], False, (0,255,255), thickness=10)
+
+        right_line_poly = np.array((self.right_fitx, self.ploty)).T.astype(np.int32)
+        right_line_poly = right_line_poly.reshape((-1,1,2))
+
+        combined_line = np.append(left_line_poly, right_line_poly[::-1])
+        combined_line = combined_line.reshape((-1, 1, 2))
+
+        return cv2.fillPoly(background_image, [combined_line], (255, 255, 255))
+        # return cv2.polylines(input_image, [combined_line], False, (0,255,255), thickness=10)
+
+        # pts = np.array([[10,5],[20,30],[70,20],[50,10]], np.int32)
+        # pts = pts.reshape((-1,1,2))
+        # return cv2.polylines(input_image, [pts], False, (0,255,255))
 
     def __calculate_known(self, expected_corner):
         # Assume you now have a new warped binary image
