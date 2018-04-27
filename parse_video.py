@@ -407,6 +407,9 @@ colorspace = cv2.COLOR_BGR2HLS
 color_channel = 2
 
 def process_image(input_img):
+    # do all manipulation at undistorted images
+    input_img = undistort(input_img)
+
     output_img = cv2.cvtColor(input_img, colorspace)
     # cv2.imwrite(dir_name + file_name  + '_0.jpg', output_img)
 
@@ -425,9 +428,11 @@ def process_image(input_img):
 
     findLines.warped = output_img
     result, msg = findLines.calculate()
+    curve_left = 0
+    curve_right = 0
     if True:
         if result:
-            result, curve_left, curve_right, curve_div = findLines.measure_curvation()
+            curve_left, curve_right = findLines.measure_curvation()
             msg += " - curves l : {} - r : {}".format(curve_left, curve_right)
         # figure, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, 10))
 
@@ -443,7 +448,13 @@ def process_image(input_img):
         unwarped_lane = warp_shrink_top(findLines.draw_lines(unwarp_expand_top(input_img)))
 
         merged_image = input_img
-        merged_image[unwarped_lane > 0] = 255
+        merged_image[unwarped_lane > 0] = [61, 148, 15]
+
+        meters, txt = findLines.measure_center_difference()
+
+        cv2.putText(merged_image,
+                    'radius curvation {:4.0f} m. - vehicle is {:.2f} m. {} of center'.format((curve_right + curve_left) / 2, meters, txt),
+                    (130,50), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2)
 
         # merged_image = input_img + unwarped_lane
         return merged_image

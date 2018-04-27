@@ -192,7 +192,9 @@ class FindLines:
         combined_line = np.append(left_line_poly, right_line_poly[::-1])
         combined_line = combined_line.reshape((-1, 1, 2))
 
-        return cv2.fillPoly(background_image, [combined_line], (255, 255, 255))
+        cv2.fillPoly(background_image, [combined_line], (255, 255, 255))
+
+        return cv2.cvtColor(background_image, cv2.COLOR_RGB2GRAY)
         # return cv2.polylines(input_image, [combined_line], False, (0,255,255), thickness=10)
 
         # pts = np.array([[10,5],[20,30],[70,20],[50,10]], np.int32)
@@ -273,24 +275,40 @@ class FindLines:
         # if abs(self.left_curverad - self.right_curverad) < self.curv_diff and \
         #         (self.left_curverad >= 0 and self.right_curverad >= 0 or self.left_curverad <= 0 and self.right_curverad <= 0):
         #     print('new curf diff {:6.0f} (new l - {:6.0f}, r - {:6.0f}'.format(self.curv_diff, self.left_curverad, self.right_curverad))
-        return True, self.left_curverad, self.right_curverad, self.curv_diff
+        # return True, self.left_curverad, self.right_curverad, self.curv_diff
 
         # Define conversions in x and y from pixels space to meters
-        ym_per_pix = 30 / 720  # meters per pixel in y dimension
-        xm_per_pix = 3.7 / 700  # meters per pixel in x dimension
+        self.ym_per_pix = 30 / 720  # meters per pixel in y dimension
+        self.xm_per_pix = 3.7 / 700  # meters per pixel in x dimension
 
-        # # Fit new polynomials to x,y in world space
-        # left_fit_cr = np.polyfit(self.ploty * ym_per_pix, self.leftx * xm_per_pix, 2)
-        # right_fit_cr = np.polyfit(self.ploty * ym_per_pix, self.rightx * xm_per_pix, 2)
+        # Fit new polynomials to x,y in world space
+        left_fit_cr = np.polyfit(self.ploty * self.ym_per_pix, self.left_fitx * self.xm_per_pix, 2)
+        right_fit_cr = np.polyfit(self.ploty * self.ym_per_pix, self.right_fitx * self.xm_per_pix, 2)
         # # Calculate the new radii of curvature
-        # self.left_curverad_m = ((1 + (2 * left_fit_cr[0] * y_eval * ym_per_pix + left_fit_cr[1]) ** 2) ** 1.5) / np.absolute(
-        #     2 * left_fit_cr[0])
-        # self.right_curverad_m = ((1 + (
-        #             2 * right_fit_cr[0] * y_eval * ym_per_pix + right_fit_cr[1]) ** 2) ** 1.5) / np.absolute(
-        #     2 * right_fit_cr[0])
+        self.left_curverad_m = ((1 + (2 * left_fit_cr[0] * y_eval * self.ym_per_pix + left_fit_cr[1]) ** 2) ** 1.5) / np.absolute(
+            2 * left_fit_cr[0])
+        self.right_curverad_m = ((1 + (
+                    2 * right_fit_cr[0] * y_eval * self.ym_per_pix + right_fit_cr[1]) ** 2) ** 1.5) / np.absolute(
+            2 * right_fit_cr[0])
         # # Now our radius of curvature is in meters
-        # print(self.left_curverad_m, 'm', self.right_curverad_m, 'm')
-        # # Example values: 632.1 m    626.2 m
+        return self.left_curverad_m, self.right_curverad_m
+
+    def measure_center_difference(self):
+        """
+        :return: meters from center, pos is right, neg is left
+        """
+        left_lane_center_px = self.left_fitx[-1]
+        right_lane_center_px = self.right_fitx[-1]
+        
+        current_center = (left_lane_center_px + right_lane_center_px) / 2
+
+        meters_from_center = (current_center - 640 ) * self.xm_per_pix
+        if meters_from_center > 0:
+            txt = 'right'
+        else:
+            txt = 'left'
+
+        return meters_from_center, txt
 
     def reset_curv_diff(self):
         self.curv_diff = sys.float_info.max
