@@ -22,7 +22,7 @@ The goals / steps of this project are the following:
 [image4a]: ./examples/straight_lines1.jpg "Warp Example"
 [image4b]: ./examples/straight_lines1_unwarp.jpg "Warp Example"
 [image5]: ./examples/color_fit_lines.jpg "Fit Visual"
-[image6]: ./examples/example_output.jpg "Output"
+[image6]: ./examples/video_still.jpg "Output"
 [video1]: ./project_video.mp4 "Video"
 
 ---
