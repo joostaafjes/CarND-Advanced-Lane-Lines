@@ -158,235 +158,10 @@ def warp_shrink_top(img):
 
     return warped
 
-def region_of_interest(img):
-    """
-    Applies an image mask.
-
-    Only keeps the region of the image defined by the polygon
-    formed from `vertices`. The rest of the image is set to black.
-    """
-    top_margin = 280
-    lower_margin = 50
-    img_shape = output_img.shape
-    min_y = img_shape[0] - top_margin
-    max_y = img_shape[0] - lower_margin
-    max_x = img_shape[1]
-    vertices = np.array([[(0, max_y), (0, min_y), (max_x, min_y), (max_x, max_y)]], dtype=np.int32)
-
-    # defining a blank mask to start with
-    mask = np.zeros_like(img)
-
-    # defining a 3 channel or 1 channel color to fill the mask with depending on the input image
-    if len(img.shape) > 2:
-        channel_count = img.shape[2]  # i.e. 3 or 4 depending on your image
-        ignore_mask_color = (255,) * channel_count
-    else:
-        ignore_mask_color = 255
-
-    # filling pixels inside the polygon defined by "vertices" with the fill color
-    cv2.fillPoly(mask, vertices, ignore_mask_color)
-
-    # returning the image only where mask pixels are nonzero
-    masked_image = cv2.bitwise_and(img, mask)
-    return masked_image
-
-def bin_to_img(img_binary):
-    output_img = np.zeros_like(img_binary)
-    output_img[(img_binary == 1)] = 255
-    return output_img
-
-def combine(*s_binary):
-    # Combine the multiple binary thresholds
-    combined_binary = np.zeros_like(s_binary[0])
-    combined_binary[(s_binary == 1)] = 1
-    for index in range(len(s_binary) - 1):
-        combined_binary[(combined_binary == 1) | (s_binary[index + 1] == 1)] = 1
-
-    return combined_binary
-
-def combine_methods_and_write(*methods):
-    filename = dir_name + file_name + '_'
-    combined_binary = np.array([])
-    for method in methods:
-        filename += method
-        if method == 'n':
-            s_binary = normal_bin_output_img
-        elif method == 'x':
-            s_binary = sobelx_bin_output_img
-        elif method == 'y':
-            s_binary = sobely_bin_output_img
-        elif method == 'm':
-            s_binary = sobelm_bin_output_img
-        else:
-            s_binary = sobeld_bin_output_img
-
-        # Combine the multiple binary thresholds
-        if combined_binary.size == 0:
-            combined_binary = np.zeros_like(s_binary)
-            combined_binary[(s_binary == 1)] = 1
-        else:
-            combined_binary[(combined_binary == 1) & (s_binary == 1)] = 1
-
-    filename += ".jpg"
-    cv2.imwrite(filename, bin_to_img(combined_binary))
-
-def combine_methods(combinations, write=False):
-    filename = dir_name + file_name + '_' + combinations
-    combined_binary = np.array([])
-
-    if combinations[0] == 'n':
-        s_binary = normal_bin_output_img
-    elif combinations[0] == 'x':
-        s_binary = sobelx_bin_output_img
-    elif combinations[0] == 'y':
-        s_binary = sobely_bin_output_img
-    elif combinations[0] == 'm':
-        s_binary = sobelm_bin_output_img
-    else:
-        s_binary = sobeld_bin_output_img
-    combined_binary = np.zeros_like(s_binary)
-    combined_binary[(s_binary == 1)] = 1
-
-    if len(combinations) > 1:
-        for index in range((len(combinations) - 1) // 2):
-            method = combinations[(index + 1) * 2]
-            if method == 'n':
-                s_binary = normal_bin_output_img
-            elif method == 'x':
-                s_binary = sobelx_bin_output_img
-            elif method == 'y':
-                s_binary = sobely_bin_output_img
-            elif method == 'm':
-                s_binary = sobelm_bin_output_img
-            else:
-                s_binary = sobeld_bin_output_img
-            if combinations[index * 2 + 1] == '&':
-                combined_binary[(combined_binary == 1) & (s_binary == 1)] = 1
-            else:
-                combined_binary[(combined_binary == 1) | (s_binary == 1)] = 1
-
-    filename += ".jpg"
-    img = bin_to_img(combined_binary)
-    if write:
-        cv2.imwrite(filename, img)
-
-    return img
-
-def get_all_combinations_old():
-    n = 9
-    count = 0
-    mylist = []
-    for combination in range(1, 2 ** n):
-        comb = ''
-        if combination & (2 ** (n - 1)) > 0:
-            comb += 'n'
-        if combination & (2 ** (n - 3)) > 0:
-            if comb != '':
-                if combination & (2 ** (n - 2)) > 0:
-                    comb += '&'
-                else:
-                    comb += '|'
-            comb += 'x'
-        if combination & (2 ** (n - 5)) > 0:
-            if comb != '':
-                if combination & (2 ** (n - 4)) > 0:
-                    comb += '&'
-                else:
-                    comb += '|'
-            comb += 'y'
-        if combination & (2 ** (n - 7)) > 0:
-            if comb != '':
-                if combination & (2 ** (n - 6)) > 0:
-                    comb += '&'
-                else:
-                    comb += '|'
-            comb += 'm'
-        if combination & (2 ** (n - 9)) > 0:
-            if comb != '':
-                if combination & (2 ** (n - 8)) > 0:
-                    comb += '&'
-                else:
-                    comb += '|'
-            comb += 'd'
-        if comb != '':
-            mylist.append(comb)
-            count += 1
-    myset = set(mylist)
-    mylist2 = list(myset)
-
-    return mylist2
-
-def get_all_combinations(length=1):
-
-    methods = ['n', 'x', 'y', 'm', 'd', '']
-    oper = ['|', '&', '']
-
-    a = product(methods, oper, methods, oper, methods, oper, methods, oper, methods)
-
-    def f(x):
-        z = []
-        for y in filter(str.isalpha, x):
-            z.append(y)
-        return len(z) == len(set(z))
-
-    # remove double letters
-    it = filter(f, a)
-
-    mylist = []
-    for i in it:
-        txt = i[0] + i[1] + i[2] + i[3] + i[4] + i[5] + i[6] + i[7] + i[8]
-        if len(txt) == 0:
-            continue
-        if len(txt) != length:
-            continue
-        if not str.isalpha(txt[0]) or not str.isalpha(txt[-1]):
-            continue
-        if len(txt) > 1 and str.isalpha(txt):
-            continue
-        if len(txt) % 2 == 0:
-            continue
-        skip = False
-        if len(txt) > 1:
-            for index in range(len(txt) - 1):
-                if str.isalpha(txt[index]) and str.isalpha(txt[index + 1]):
-                    skip = True
-                    break
-                if not str.isalpha(txt[index]) and not str.isalpha(txt[index + 1]):
-                    skip = True
-                    break
-        if skip:
-            continue
-        if txt[0] > txt[-1]:
-            txt = txt[::-1]
-        mylist.append(txt)
-
-    mylist = sorted(list(set(mylist)))
-    print('# of combinations:', len(mylist))
-
-    return mylist
-
-def get_string_for_combination(combination):
-    result = ''
-    if 'n' in combination:
-        result += 'n{:3.1f}_{:3.1f}'.format(n_min_thresh, n_max_thresh)
-    if 'x' in combination:
-        result += 'x{:3.1f}_{:3.1f}'.format(x_min_thresh, x_max_thresh)
-    if 'y' in combination:
-        result += 'y{:3.1f}_{:3.1f}'.format(y_min_thresh, y_max_thresh)
-    if 'm' in combination:
-        result += 'm{:3.1f}_{:3.1f}'.format(m_min_thresh, m_max_thresh)
-    if 'd' in combination:
-        result += 'd{:3.1f}_{:3.1f}'.format(sobel_dir_min_thresh, sobel_dir_max_thresh)
-    result += '_k{:d}'.format(ksize)
-    return result
-
 start = dt.datetime.now()
 
 # Choose a Sobel kernel size
 ksize = 3 # Choose a larger odd number to smooth gradient measurements
-
-# combined = np.zeros_like(dir_binary)
-# combined[((gradx == 1) & (grady == 1)) | ((mag_binary == 1) & (dir_binary == 1))] = 1
 
 image_files = [
     ['./straight_lines1', 'straight'],
@@ -434,17 +209,6 @@ def process_image(input_img):
         if result:
             curve_left, curve_right = findLines.measure_curvation()
             msg += " - curves l : {} - r : {}".format(curve_left, curve_right)
-        # figure, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, 10))
-
-        # histogram = np.sum(output_img[output_img.shape[0] // 2:, :], axis=0)
-        # ax1.imshow(output_img, cmap='gray')
-        # ax1.set_title(msg)
-        # ax2.plot(histogram)
-        # ax2.set_title('Histogram')
-
-        # output_img = findLines.plot(ax1, title=msg, input_image=input_img)
-
-        # return warp_shrink_top(findLines.draw_lines(unwarp_expand_top(input_img)))
         unwarped_lane = warp_shrink_top(findLines.draw_lines(unwarp_expand_top(input_img)))
 
         merged_image = input_img
@@ -459,18 +223,11 @@ def process_image(input_img):
         # merged_image = input_img + unwarped_lane
         return merged_image
 
-        # plt.close(figure)
-
     return input_img
 
 
 videos = [
-    # 'challenge',
-    'harder_challenge_video',
-    # 'solidWhiteRight',
-    'challenge_video',
     'project_video',
-    # 'solidYellowLeft',
 ]
 
 for input_file_name in videos:
