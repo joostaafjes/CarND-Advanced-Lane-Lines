@@ -128,8 +128,8 @@ def get_perspective_parameters():
     DST_MARGIN_X = 100
 
     TOP_Y = 450
-    LEFT_TOP_X = 593
-    RIGHT_TOP_X = 690
+    LEFT_TOP_X = 596
+    RIGHT_TOP_X = 685
 
     BOTTOM_Y = 675
     LEFT_BOTTOM_X = 270
