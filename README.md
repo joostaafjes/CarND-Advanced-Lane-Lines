@@ -18,7 +18,7 @@ The goals / steps of this project are the following:
 
 [image1]: ./examples/test_undist1.png "Undistorted"
 [image2]: ./examples/test_undist2.png "Road Undistorted"
-[image3]: ./examples/binary_combo_example.jpg "Binary Example"
+[image3]: ./examples/test1x_4.png "Sobel x gradient example"
 [image4]: ./examples/warped_straight_lines.jpg "Warp Example"
 [image5]: ./examples/color_fit_lines.jpg "Fit Visual"
 [image6]: ./examples/example_output.jpg "Output"
@@ -53,7 +53,29 @@ See below for the result
 
 #### 2. Describe how (and identify where in your code) you used color transforms, gradients or other methods to create a thresholded binary image.  Provide an example of a binary image result.
 
-I used a combination of color and gradient thresholds to generate a binary image (thresholding steps at lines # through # in `another_file.py`).  Here's an example of my output for this step.  (note: this is not actually from one of the test images)
+To find the best combination of:
+- color space
+- color channel
+- gradient method's (none, sobel x, sobel y, sobel magnitude or sobel gradient) -> 1 or a combination
+- min. and max. threshold per method
+I have made a script to calculate all possible combinations of previous parameters.
+
+To limit the computere calculation time, I have limited myself to the following:
+- HLS colorspace
+- S channel
+- max.combination of 2 gradient method's
+- the best single performing min. and max. threshold's
+
+The best performing combination was:
+- HLS colorspace with S channel
+- sobel x gradient
+- kernel size 3
+- min. threshold 20
+- max. threshold between 135 and 255 (all more or less equal)
+
+(Note: to my suprise there was not combination of 2 that performed beter.)
+
+An example is show below:
 
 ![alt text][image3]
 
