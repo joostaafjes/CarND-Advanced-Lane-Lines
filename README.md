@@ -23,7 +23,7 @@ The goals / steps of this project are the following:
 [image4b]: ./examples/straight_lines1_unwarp.jpg "Warp Example"
 [image5]: ./examples/color_fit_lines.jpg "Fit Visual"
 [image6]: ./examples/video_still.jpg "Output"
-[video1]: ./project_video.mp4 "Video"
+[video1]: ./test_videos_output/project_video_out.mp4 "Video"
 
 ---
 
@@ -137,6 +137,8 @@ I implemented this step in lines # through # in my code in `yet_another_file.py`
 #### 1. Provide a link to your final video output.  Your pipeline should perform reasonably well on the entire project video (wobbly lines are ok but no catastrophic failures that would cause the car to drive off the road!).
 
 Here's a [link to my video result](./project_video.mp4)
+
+[![Project video output](https://img.youtube.com/vi/Czy-N3KYDc0/0.jpg)](https://www.youtube.com/watch?v=Czy-N3KYDc0)
 
 ---
 
