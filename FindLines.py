@@ -11,23 +11,8 @@ class FindLines:
 
     def __init__(self, warped):
         self.warped = warped
-        self.first = True
-        self.reset_curv_diff()
 
     def calculate(self, expected_corner=None):
-        if self.first:
-            return self.__calculate(expected_corner)
-        else:
-            return self.__calculate_known(expected_corner)
-
-    def plot(self, ax, title='', input_image=None):
-        if self.first:
-            self.__plot(ax, title, input_image)
-        else:
-            self.__plot_known(ax, title)
-        # self.first = False
-
-    def __calculate(self, expected_corner):
         # Assuming you have created a warped binary image called "warped"
         # Take a histogram of the bottom half of the image
         histogram = np.sum(self.warped[self.warped.shape[0]//2:,:], axis=0)
@@ -142,7 +127,7 @@ class FindLines:
 
         return True, 'curves as expected'
 
-    def __plot(self, ax, title, input):
+    def plot(self, ax, title, input):
         if input.any() == None:
             self.out_img[self.nonzeroy[self.left_lane_inds], self.nonzerox[self.left_lane_inds]] = [255, 0, 0]
             self.out_img[self.nonzeroy[self.right_lane_inds], self.nonzerox[self.right_lane_inds]] = [0, 0, 255]
@@ -195,73 +180,6 @@ class FindLines:
         cv2.fillPoly(background_image, [combined_line], (255, 255, 255))
 
         return cv2.cvtColor(background_image, cv2.COLOR_RGB2GRAY)
-        # return cv2.polylines(input_image, [combined_line], False, (0,255,255), thickness=10)
-
-        # pts = np.array([[10,5],[20,30],[70,20],[50,10]], np.int32)
-        # pts = pts.reshape((-1,1,2))
-        # return cv2.polylines(input_image, [pts], False, (0,255,255))
-
-    def __calculate_known(self, expected_corner):
-        # Assume you now have a new warped binary image
-        # from the next frame of video (also called "warped")
-        # It's now much easier to find line pixels!
-        nonzero = self.warped.nonzero()
-        self.nonzeroy = np.array(nonzero[0])
-        self.nonzerox = np.array(nonzero[1])
-        self.margin = 100
-        self.left_lane_inds = ((self.nonzerox > (self.left_fit[0] * (self.nonzeroy ** 2) + self.left_fit[1] * self.nonzeroy +
-                                       self.left_fit[2] - self.margin)) & (self.nonzerox < (self.left_fit[0] * (self.nonzeroy ** 2) +
-                                                                             self.left_fit[1] * self.nonzeroy + self.left_fit[
-                                                                                 2] + self.margin)))
-
-        self.right_lane_inds = ((self.nonzerox > (self.right_fit[0] * (self.nonzeroy ** 2) + self.right_fit[1] * self.nonzeroy +
-                                        self.right_fit[2] - self.margin)) & (self.nonzerox < (self.right_fit[0] * (self.nonzeroy ** 2) +
-                                                                               self.right_fit[1] * self.nonzeroy + self.right_fit[
-                                                                                   2] + self.margin)))
-
-        # Again, extract left and right line pixel positions
-        leftx = self.nonzerox[self.left_lane_inds]
-        lefty = self.nonzeroy[self.left_lane_inds]
-        rightx = self.nonzerox[self.right_lane_inds]
-        righty = self.nonzeroy[self.right_lane_inds]
-
-        # Fit a second order polynomial to each
-        self.left_fit = np.polyfit(lefty, leftx, 2)
-        self.right_fit = np.polyfit(righty, rightx, 2)
-
-        # Generate x and y values for plotting
-        self.ploty = np.linspace(0, self.warped.shape[0] - 1, self.warped.shape[0])
-        self.left_fitx = self.left_fit[0] * self.ploty ** 2 + self.left_fit[1] * self.ploty + self.left_fit[2]
-        self.right_fitx = self.right_fit[0] * self.ploty ** 2 + self.right_fit[1] * self.ploty + self.right_fit[2]
-
-    def __plot_known(self, ax, title):
-        # Create an image to draw on and an image to show the selection window
-        out_img = np.dstack((self.warped, self.warped, self.warped)) * 255
-        window_img = np.zeros_like(out_img)
-        # Color in left and right line pixels
-        out_img[self.nonzeroy[self.left_lane_inds], self.nonzerox[self.left_lane_inds]] = [255, 0, 0]
-        out_img[self.nonzeroy[self.right_lane_inds], self.nonzerox[self.right_lane_inds]] = [0, 0, 255]
-
-        # Generate a polygon to illustrate the search window area
-        # And recast the x and y points into usable format for cv2.fillPoly()
-        left_line_window1 = np.array([np.transpose(np.vstack([self.left_fitx - self.margin, self.ploty]))])
-        left_line_window2 = np.array([np.flipud(np.transpose(np.vstack([self.left_fitx + self.margin,
-                                                                        self.ploty])))])
-        left_line_pts = np.hstack((left_line_window1, left_line_window2))
-        right_line_window1 = np.array([np.transpose(np.vstack([self.right_fitx - self.margin, self.ploty]))])
-        right_line_window2 = np.array([np.flipud(np.transpose(np.vstack([self.right_fitx + self.margin,
-                                                                         self.ploty])))])
-        right_line_pts = np.hstack((right_line_window1, right_line_window2))
-
-        # Draw the lane onto the warped blank image
-        cv2.fillPoly(window_img, np.int_([left_line_pts]), (0, 255, 0))
-        cv2.fillPoly(window_img, np.int_([right_line_pts]), (0, 255, 0))
-        result = cv2.addWeighted(out_img, 1, window_img, 0.3, 0)
-        ax.imshow(result)
-        ax.plot(self.left_fitx, self.ploty, color='yellow')
-        ax.plot(self.right_fitx, self.ploty, color='yellow')
-        ax.set_xlim(0, 1280)
-        ax.set_ylim(720, 0)
 
     def measure_curvation(self):
         # Define y-value where we want radius of curvature
@@ -309,6 +227,3 @@ class FindLines:
             txt = 'left'
 
         return meters_from_center, txt
-
-    def reset_curv_diff(self):
-        self.curv_diff = sys.float_info.max

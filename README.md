@@ -21,7 +21,7 @@ The goals / steps of this project are the following:
 [image3]: ./examples/test1x_4.png "Sobel x gradient example"
 [image4a]: ./examples/straight_lines1.jpg "Warp Example"
 [image4b]: ./examples/straight_lines1_unwarp.jpg "Warp Example"
-[image5]: ./examples/color_fit_lines.jpg "Fit Visual"
+[image5]: ./examples/test3x_4.png "Fit Visual"
 [image6]: ./examples/video_still.jpg "Output"
 [video1]: ./test_videos_output/project_video_out.mp4 "Video"
 
@@ -116,17 +116,29 @@ I verified that my perspective transform was working as expected by drawing the 
 
 #### 4. Identify lane-line pixels and fit their positions with a polynomial
 
-Then I did some other stuff and fit my lane lines with a 2nd order polynomial kinda like this:
+As as starting point I have used the 'Sliding windows' method as described in section 33 of lesson 15. This method exists of:
+1. Take a histogram of the lower half of the window
+2. Find the peak of the left and the right half of the image -> these are the starting points
+3. Only for training purposes: Check if the starting points are valid
+4. Split the image in 9 vertical windows
+5. For each window (starting at the bottom, working upwards), take all the points and take the mean of the pixels in that windows
+6. From the resulting pixels, calculate the polynomial
+7. Only for training purposes: Check if the curve is left, straight or right and compare it with the expected corner
+8. For the derived polynomial: construct a line by calculating the x for each y
+
+The above strategy is implemented in the class FindLines (file FindLines.py), method calculate
+
+See below for an example.
 
 ![alt text][image5]
 
 #### 5. Calculation the radius of curvature of the lane and the position of the vehicle with respect to center.
 
-I did this in lines # through # in my code in `my_other_file.py`
+I did this in lines 189 through 234 in my code in `FindLines.py`
 
 #### 6. Example image of plotted back down onto the road
 
-I implemented this step in lines # through # in my code in `yet_another_file.py` in the function `map_lane()`.  Here is an example of my result on a test image:
+I implemented this step in lines 163 through 182 in my code in `FindLines.py` in the method `draw_lines()`.  Here is an example of my result on a test image:
 
 ![alt text][image6]
 
@@ -138,12 +150,24 @@ I implemented this step in lines # through # in my code in `yet_another_file.py`
 
 Here's a [link to my video result](./project_video.mp4)
 
+Or click on the YouTube video below:
+
 [![Project video output](https://img.youtube.com/vi/Czy-N3KYDc0/0.jpg)](https://www.youtube.com/watch?v=Czy-N3KYDc0)
 
 ---
 
 ### Discussion
 
-#### 1. Briefly discuss any problems / issues you faced in your implementation of this project.  Where will your pipeline likely fail?  What could you do to make it more robust?
+#### Bottlenecks
 
-Here I'll talk about the approach I took, what techniques I used, what worked and why, where the pipeline might fail and how I might improve it if I were going to pursue this project further.  
+I have spend most time (and far too much) in finding the right gradient that was working for all the 8 test images. 
+I didn't want to do this manual so I created an algorithm that could automatically find the best combination of threshold for the different gradient sobel method.
+But at the end this took too much time and was not optimal yet, so took the best solution I had so far. This is done in the files pipeline.py and pipeline_all.py
+
+#### Improvements
+
+The following improvements could be done:
+1. Improve the algorithm to find the best gradient method OR
+2. Use a deep learning approach to find the polynomial
+3. The sliding windows method could be improved
+

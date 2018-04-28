@@ -211,6 +211,7 @@ def process_image(input_img):
             msg += " - curves l : {} - r : {}".format(curve_left, curve_right)
         unwarped_lane = warp_shrink_top(findLines.draw_lines(unwarp_expand_top(input_img)))
 
+        # use unwarped_lane as a mask to draw lane
         merged_image = input_img
         merged_image[unwarped_lane > 0] = [61, 148, 15]
 
