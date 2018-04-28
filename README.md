@@ -148,7 +148,7 @@ I implemented this step in lines 163 through 182 in my code in `FindLines.py` in
 
 #### 1. Final video output.
 
-Here's a [link to my video result](./project_video.mp4)
+Here's a [link to my video result](./test_videos_output/project_video.mp4)
 
 Or click on the YouTube video below:
 
