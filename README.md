@@ -41,7 +41,7 @@ A few images were not suitable for calibration because not all inner corners wer
 
 ### Pipeline (single images)
 
-#### 1. Provide an example of a distortion-corrected image.
+#### 1. Distortion-correction
 
 I appled the distortion correction to the test images `test1.jpg`
 
@@ -52,7 +52,7 @@ See below for the result
 
 ![alt text][image2]
 
-#### 2. Describe how (and identify where in your code) you used color transforms, gradients or other methods to create a thresholded binary image.  Provide an example of a binary image result.
+#### 2. Color transforms, gradients or other methods to create a thresholded binary image.
 
 To find the best combination of:
 - color space
@@ -80,7 +80,7 @@ An example is show below:
 
 ![alt text][image3]
 
-#### 3. Describe how (and identify where in your code) you performed a perspective transform and provide an example of a transformed image.
+#### 3. Perspective transform
 
 The code for my perspective transform includes functions called:
 `unwarp_expand_top()`
@@ -114,17 +114,17 @@ I verified that my perspective transform was working as expected by drawing the 
 ![alt text][image4a]
 ![alt text][image4b]
 
-#### 4. Describe how (and identify where in your code) you identified lane-line pixels and fit their positions with a polynomial?
+#### 4. Identify lane-line pixels and fit their positions with a polynomial
 
 Then I did some other stuff and fit my lane lines with a 2nd order polynomial kinda like this:
 
 ![alt text][image5]
 
-#### 5. Describe how (and identify where in your code) you calculated the radius of curvature of the lane and the position of the vehicle with respect to center.
+#### 5. Calculation the radius of curvature of the lane and the position of the vehicle with respect to center.
 
 I did this in lines # through # in my code in `my_other_file.py`
 
-#### 6. Provide an example image of your result plotted back down onto the road such that the lane area is identified clearly.
+#### 6. Example image of plotted back down onto the road
 
 I implemented this step in lines # through # in my code in `yet_another_file.py` in the function `map_lane()`.  Here is an example of my result on a test image:
 
@@ -134,7 +134,7 @@ I implemented this step in lines # through # in my code in `yet_another_file.py`
 
 ### Pipeline (video)
 
-#### 1. Provide a link to your final video output.  Your pipeline should perform reasonably well on the entire project video (wobbly lines are ok but no catastrophic failures that would cause the car to drive off the road!).
+#### 1. Final video output.
 
 Here's a [link to my video result](./project_video.mp4)
 
