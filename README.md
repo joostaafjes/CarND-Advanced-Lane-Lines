@@ -140,6 +140,9 @@ I implemented this step in lines 163 through 182 in my code in `FindLines.py` in
 
 ![alt text][image6]
 
+Click on the YouTube video below to see the intermediate steps:
+
+[![Project video output](https://img.youtube.com/vi/WTOi6wlg0pI/0.jpg)](https://www.youtube.com/watch?v=WTOi6wlg0pI)
 ---
 
 ### Pipeline (video)
@@ -150,7 +153,7 @@ Here's a [link to my video result](./test_videos_output/project_video.mp4)
 
 Or click on the YouTube video below:
 
-[![Project video output](https://img.youtube.com/vi/Czy-N3KYDc0/0.jpg)](https://www.youtube.com/watch?v=Czy-N3KYDc0)
+[![Project video output](https://img.youtube.com/vi/4yvRBky0aAQ/0.jpg)](https://www.youtube.com/watch?v=4yvRBky0aAQ)
 
 ---
 
