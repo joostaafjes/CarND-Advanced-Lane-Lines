@@ -9,8 +9,12 @@ from matplotlib.figure import Figure
 
 class FindLines:
 
-    def __init__(self, warped):
+    def __init__(self, warped, len_polygon_hist=10):
         self.warped = warped
+
+        self.left_fit_hist = []
+        self.right_fit_hist = []
+        self.len_polygon_hist = len_polygon_hist
 
     def calculate(self, expected_corner=None):
         # Assuming you have created a warped binary image called "warped"
@@ -97,10 +101,24 @@ class FindLines:
         self.left_fit = np.polyfit(self.lefty, self.leftx, 2)
         self.right_fit = np.polyfit(self.righty, self.rightx, 2)
 
+        # calculate average curve
+        if len(self.left_fit_hist) > self.len_polygon_hist:
+            self.left_fit_hist.pop(0)
+        self.left_fit_hist.append(self.left_fit)
+        self.left_fit = np.average(self.left_fit_hist, axis=0)
+
+        if len(self.right_fit_hist) > self.len_polygon_hist:
+            self.right_fit_hist.pop(0)
+        self.right_fit_hist.append(self.right_fit)
+        self.right_fit = np.average(self.right_fit_hist, axis=0)
+
         # Generate x and y values for plotting
         self.ploty = np.linspace(0, self.warped.shape[0] - 1, self.warped.shape[0])
         self.left_fitx = self.left_fit[0] * self.ploty ** 2 + self.left_fit[1] * self.ploty + self.left_fit[2]
         self.right_fitx = self.right_fit[0] * self.ploty ** 2 + self.right_fit[1] * self.ploty + self.right_fit[2]
+
+        self.out_img[self.nonzeroy[self.left_lane_inds], self.nonzerox[self.left_lane_inds]] = [255, 0, 0]
+        self.out_img[self.nonzeroy[self.right_lane_inds], self.nonzerox[self.right_lane_inds]] = [0, 0, 255]
 
         if expected_corner:
             if (self.left_fitx.max() - self.left_fitx.min()) > 25 and expected_corner == 'straight':
@@ -128,12 +146,12 @@ class FindLines:
         return True, 'curves as expected'
 
     def plot(self, ax, title, input):
-        if input.any() == None:
-            self.out_img[self.nonzeroy[self.left_lane_inds], self.nonzerox[self.left_lane_inds]] = [255, 0, 0]
-            self.out_img[self.nonzeroy[self.right_lane_inds], self.nonzerox[self.right_lane_inds]] = [0, 0, 255]
-            ax.imshow(self.out_img)
-        else:
-            ax.imshow(input)
+        # if input.any() == None:
+        #     self.out_img[self.nonzeroy[self.left_lane_inds], self.nonzerox[self.left_lane_inds]] = [255, 0, 0]
+        #     self.out_img[self.nonzeroy[self.right_lane_inds], self.nonzerox[self.right_lane_inds]] = [0, 0, 255]
+        ax.imshow(self.out_img)
+        # else:
+        #     ax.imshow(input)
         ax.plot(self.left_fitx, self.ploty, color='red')
         ax.plot(self.right_fitx, self.ploty, color='red')
         ax.set_xlim(0, 1280)
@@ -202,13 +220,14 @@ class FindLines:
         # Fit new polynomials to x,y in world space
         left_fit_cr = np.polyfit(self.ploty * self.ym_per_pix, self.left_fitx * self.xm_per_pix, 2)
         right_fit_cr = np.polyfit(self.ploty * self.ym_per_pix, self.right_fitx * self.xm_per_pix, 2)
-        # # Calculate the new radii of curvature
+        # Calculate the new radii of curvature
         self.left_curverad_m = ((1 + (2 * left_fit_cr[0] * y_eval * self.ym_per_pix + left_fit_cr[1]) ** 2) ** 1.5) / np.absolute(
             2 * left_fit_cr[0])
         self.right_curverad_m = ((1 + (
                     2 * right_fit_cr[0] * y_eval * self.ym_per_pix + right_fit_cr[1]) ** 2) ** 1.5) / np.absolute(
             2 * right_fit_cr[0])
-        # # Now our radius of curvature is in meters
+
+        # Now our radius of curvature is in meters
         return self.left_curverad_m, self.right_curverad_m
 
     def measure_center_difference(self):

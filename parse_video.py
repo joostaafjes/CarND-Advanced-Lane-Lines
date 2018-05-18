@@ -15,6 +15,7 @@ import os
 from itertools import product
 import shutil
 import datetime as dt
+from PIL import Image
 
 from matplotlib import pylab
 
@@ -178,30 +179,38 @@ images = []
 findLines = FindLines(None)
 # findLines = SlidingWindowSearch(None)
 
-colorspace = cv2.COLOR_BGR2HLS
-color_channel = 2
-
 def process_image(input_img):
     # do all manipulation at undistorted images
     input_img = undistort(input_img)
 
-    output_img = cv2.cvtColor(input_img, colorspace)
-    # cv2.imwrite(dir_name + file_name  + '_0.jpg', output_img)
-
-    if colorspace != cv2.COLOR_BGR2GRAY:
-        output_img= output_img[:,:,color_channel]
-
-    output_img = unwarp_expand_top(output_img)
-    # cv2.imwrite(dir_name + file_name  + '_2.jpg', output_img)
-
+    # HLS - S channel
+    output_img_hls = cv2.cvtColor(input_img, cv2.COLOR_BGR2HLS)
+    output_img_hls_2 = output_img_hls[:,:,2]
+    output_img_hls_2_unwarped = unwarp_expand_top(output_img_hls_2)
     x_min_thresh = 20
     x_max_thresh = 255
-    output_img = abs_sobel_thresh(output_img, ksize, orient='x',thresh=(x_min_thresh, x_max_thresh))
+    output_img_hls_2_unwarped_abs_sobel = abs_sobel_thresh(output_img_hls_2_unwarped, ksize, orient='x',thresh=(x_min_thresh, x_max_thresh))
 
-    if not output_img.any():
-        print('skip all 0')
+    # LAB - B channel
+    output_img_lab = cv2.cvtColor(input_img, cv2.COLOR_BGR2LAB)
+    output_img_lab_2 = output_img_lab[:,:,2]
+    output_img_lab_2_unwarped = unwarp_expand_top(output_img_lab_2)
+    x_min_thresh = 20
+    x_max_thresh = 255
+    output_img_lab_2_unwarped_abs_sobel = abs_sobel_thresh(output_img_lab_2_unwarped, ksize, orient='x',thresh=(x_min_thresh, x_max_thresh))
 
-    findLines.warped = output_img
+    # RGB - R channel
+    output_img_rgb = cv2.cvtColor(input_img, cv2.COLOR_BGR2RGB)
+    output_img_rgb_2 = output_img_rgb[:,:,0]
+    output_img_rgb_2_unwarped = unwarp_expand_top(output_img_rgb_2)
+    x_min_thresh = 20
+    x_max_thresh = 255
+    output_img_rgb_2_unwarped_abs_sobel = abs_sobel_thresh(output_img_rgb_2_unwarped, ksize, orient='x',thresh=(x_min_thresh, x_max_thresh))
+
+    combined_or_binary = np.zeros_like(output_img_hls_2_unwarped_abs_sobel)
+    combined_or_binary[(output_img_hls_2_unwarped_abs_sobel == 1) | (output_img_rgb_2_unwarped_abs_sobel == 1)] = 1
+
+    findLines.warped = combined_or_binary
     result, msg = findLines.calculate()
     curve_left = 0
     curve_right = 0
@@ -218,11 +227,35 @@ def process_image(input_img):
         meters, txt = findLines.measure_center_difference()
 
         cv2.putText(merged_image,
-                    'radius curvation {:4.0f} m. - vehicle is {:.2f} m. {} of center'.format((curve_right + curve_left) / 2, meters, txt),
-                    (130,50), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2)
+                    'radius curvation l:{:4.0f} r:{:4.0f} avg:{:4.0f} m.-vehicle is {:.2f} m. {} of center'.format(curve_left, curve_right, (curve_right + curve_left) / 2, meters, txt),
+                    (10,50), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2)
+
+        image_with_embeds = Image.fromarray(merged_image)
+
+        if embed_intermediate_images:
+        # HLS
+            output_img_hls_2_unwarped_abs_sobel = output_img_hls_2_unwarped_abs_sobel * 255
+            window_1 = Image.fromarray(output_img_hls_2_unwarped_abs_sobel)
+            window_1.thumbnail((300, 300))
+            image_with_embeds.paste(window_1, (10, 70))
+
+            # RGB
+            output_img_rgb_2_unwarped_abs_sobel = output_img_rgb_2_unwarped_abs_sobel * 255
+            window_3 = Image.fromarray(output_img_rgb_2_unwarped_abs_sobel)
+            window_3.thumbnail((300, 300))
+            image_with_embeds.paste(window_3, (320, 70))
+
+            combined_or_binary = combined_or_binary * 255
+            window_3 = Image.fromarray(combined_or_binary)
+            window_3.thumbnail((300, 300))
+            image_with_embeds.paste(window_3, (630, 70))
+
+            window_4 = Image.fromarray(findLines.out_img)
+            window_4.thumbnail((300, 300))
+            image_with_embeds.paste(window_4, (940, 70))
 
         # merged_image = input_img + unwarped_lane
-        return merged_image
+        return np.array(image_with_embeds)
 
     return input_img
 
@@ -230,6 +263,8 @@ def process_image(input_img):
 videos = [
     'project_video',
 ]
+
+embed_intermediate_images = True
 
 for input_file_name in videos:
     time_start = 0
