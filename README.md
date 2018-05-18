@@ -68,13 +68,11 @@ To limit the computere calculation time, I have limited myself to the following:
 - the best single performing min. and max. threshold's
 
 The best performing combination was:
-- HLS colorspace with S channel
+- HLS colorspace with S channel with R channel of RGB
 - sobel x gradient
 - kernel size 3
 - min. threshold 20
 - max. threshold between 135 and 255 (all more or less equal)
-
-(Note: to my suprise there was not combination of 2 that performed beter.)
 
 An example is show below:
 
